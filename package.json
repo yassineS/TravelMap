@@ -1,0 +1,17 @@
+{
+  "name": "travelmap-runner",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node runner.js",
+    "predeploy": "cp map.html index.html",
+    "deploy": "gh-pages -d ."
+  },
+  "dependencies": {
+    "jsdom": "^22.1.0",
+    "leaflet": "^1.9.4"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  }
+}
