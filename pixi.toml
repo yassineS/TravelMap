@@ -1,0 +1,11 @@
+[workspace]
+authors = ["yassineS <1767457+yassineS@users.noreply.github.com>"]
+channels = ["conda-forge", "bioconda"]
+name = "TravelMap"
+platforms = ["osx-arm64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+pypdf = ">=6.0.0,<7"
