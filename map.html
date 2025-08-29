@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Travel Journey - 2025</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 1px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #3498db, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .maps-container {
+            padding: 20px;
+        }
+        
+        .map-section {
+            margin-bottom: 40px;
+        }
+        
+        .map-title {
+            font-size: 1.8em;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 300;
+        }
+        
+        .map {
+            height: 500px;
+            border-radius: 1px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        /* Tooltip label for city names on the Europe map */
+        .leaflet-tooltip.city-label {
+            background: rgba(255,255,255,0.95);
+            border: 1px solid rgba(0,0,0,0.08);
+            color: #2c3e50;
+            padding: 4px 8px;
+            border-radius: 1px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            font-size: 0.9em;
+        }
+
+        /* Overview route date label */
+        .route-date div {
+            background: rgba(255,255,255,0.95);
+            border: 1px solid rgba(0,0,0,0.08);
+            color: #111;
+            padding: 2px 6px;
+            border-radius: 1px;
+            font-size: 0.75em;
+            line-height: 1;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        /* Tighter city label for overview map */
+        .leaflet-tooltip.city-label {
+            font-size: 0.85em;
+            padding: 3px 6px;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        
+        .legend {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 1px;
+            margin-bottom: 20px;
+        }
+        
+        .legend h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 4px;
+            margin-right: 10px;
+            border-radius: 1px;
+        }
+        
+        .flight { background-color: #e74c3c; }
+        .ground { background-color: #2B3036; }
+        .city { background-color: #3498db; }
+        
+        .itinerary {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 1px;
+            margin-top: 20px;
+        }
+        
+        .itinerary h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+
+        /* Large language picker for accessibility */
+        .lang-picker { display:flex; gap:8px; align-items:center; }
+        .lang-btn {
+            display:flex;
+            align-items:center;
+            gap:8px;
+            background: rgba(255,255,255,0.12);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.18);
+            padding: 8px 12px;
+            border-radius: 1px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .lang-btn[aria-pressed="true"] {
+            background: white;
+            color: #2c3e50;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+        }
+        .lang-btn .flag { font-size: 1.5rem; }
+        .lang-btn .lang-label { font-size: 1rem; }
+        
+        .date-item {
+            display: flex;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .date-item:last-child {
+            border-bottom: none;
+        }
+        
+        .date {
+            font-weight: bold;
+            color: #3498db;
+            min-width: 140px;
+            flex: 0 0 140px;
+        }
+        
+        .location {
+            color: #2c3e50;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            .map {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                    <h1 id="headerTitle">✈️ European Adventure 2025</h1>
+                </div>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <label id="langLabel" style="color:white; font-weight:700;">Language</label>
+                    <div id="langPicker" role="radiogroup" aria-label="Language selector" style="display:flex; gap:10px;">
+                        <button class="lang-btn" data-lang="en" aria-pressed="true" type="button">
+                            <span class="flag" aria-hidden="true">🇬🇧</span>
+                            <span class="lang-label">English</span>
+                        </button>
+                        <button class="lang-btn" data-lang="fr" aria-pressed="false" type="button">
+                            <span class="flag" aria-hidden="true">🇫🇷</span>
+                            <span class="lang-label">Français</span>
+                        </button>
+                        <button class="lang-btn" data-lang="ar" aria-pressed="false" type="button">
+                            <span class="flag" aria-hidden="true">🇲🇦</span>
+                            <span class="lang-label">العربية</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="maps-container">
+            <!-- Overview Map -->
+            <div class="map-section">
+                <h2 id="overviewTitle" class="map-title">🌍 Complete Journey Overview</h2>
+                <div class="legend">
+                    <h3 id="legendTitle">Map Legend</h3>
+                    <div class="legend-item">
+                        <div class="legend-color flight"></div>
+                        <span id="legendFlight">✈️ Flight Routes</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color ground"></div>
+                        <span id="legendGround">🚆 Train Travel</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color city"></div>
+                        <span id="legendCity">🏙️ Cities Visited</span>
+                    </div>
+                </div>
+                <div id="overviewMap" class="map"></div>
+            </div>
+            
+            <!-- Detailed Europe Map -->
+            <div class="map-section">
+                <h2 id="europeTitle" class="map-title">🏰 European Ground Journey</h2>
+                <div id="europeMap" class="map"></div>
+            </div>
+            
+            <!-- Itinerary -->
+            <div class="itinerary">
+                <h3 id="itineraryTitle">📅 Detailed Itinerary</h3>
+                <div class="date-item"><div class="date">Sep 3-4</div><div class="location"><span data-dir-seq><span data-city="Adelaide">Adelaide</span> <span data-arrow>→</span> <span data-city="Vienna">Vienna</span></span> (<span data-phrase="via">via</span> <span data-city="Doha">Doha</span>)</div></div>
+                <div class="date-item"><div class="date">Sep 4-8</div><div class="location"><span data-city="Vienna">Vienna</span>, <span data-country="Austria">Austria</span></div></div>
+                <div class="date-item"><div class="date">Sep 8-10</div><div class="location"><span data-city="Salzburg">Salzburg</span>, <span data-country="Austria">Austria</span></div></div>
+                <div class="date-item"><div class="date">Sep 10-14</div><div class="location"><span data-city="Isen">Isen</span> <span data-phrase="nearMunich">(near Munich)</span>, <span data-country="Germany">Germany</span></div></div>
+                <div class="date-item"><div class="date">Sep 14-18</div><div class="location"><span data-city="Tubingen">Tübingen</span>, <span data-country="Germany">Germany</span></div></div>
+                <div class="date-item"><div class="date">Sep 18-20</div><div class="location"><span data-city="Basel">Basel</span>, <span data-country="Switzerland">Switzerland</span></div></div>
+                <div class="date-item"><div class="date">Sep 20</div><div class="location"><span data-dir-seq><span data-city="Basel">Basel</span> <span data-arrow>→</span> <span data-city="Rabat">Rabat</span>, <span data-country="Morocco">Morocco</span></span></div></div>
+                <div class="date-item"><div class="date">Sep 20-30</div><div class="location"><span data-city="Rabat">Rabat</span>, <span data-country="Morocco">Morocco</span></div></div>
+                <div class="date-item"><div class="date">Sep 30</div><div class="location"><span data-dir-seq><span data-city="Rabat">Rabat</span> <span data-arrow>→</span> <span data-city="Geneva">Geneva</span>, <span data-country="Switzerland">Switzerland</span></span></div></div>
+                <div class="date-item"><div class="date">Sep 30-Oct 2</div><div class="location"><span data-city="Lausanne">Lausanne</span>, <span data-country="Switzerland">Switzerland</span></div></div>
+                <div class="date-item"><div class="date">Oct 2-6</div><div class="location"><span data-city="Interlaken">Interlaken</span>, <span data-country="Switzerland">Switzerland</span></div></div>
+                <div class="date-item"><div class="date">Oct 6-7</div><div class="location"><span data-city="Zurich">Zurich</span>, <span data-country="Switzerland">Switzerland</span></div></div>
+                <div class="date-item"><div class="date">Oct 7</div><div class="location"><span data-dir-seq><span data-city="Zurich">Zurich</span> <span data-arrow>→</span> <span data-city="Doha">Doha</span>, <span data-country="Qatar">Qatar</span></span></div></div>
+                <div class="date-item"><div class="date">Oct 7-8</div><div class="location"><span data-city="Doha">Doha</span>, <span data-country="Qatar">Qatar</span></div></div>
+                <div class="date-item"><div class="date">Oct 7-9</div><div class="location"><span data-dir-seq><span data-city="Doha">Doha</span> <span data-arrow>→</span> <span data-city="Adelaide">Adelaide</span></span></div></div>
+                <div class="date-item"><div class="date">Oct 9</div><div class="location"><span data-phrase="arriveIn">Arrive in</span> <span data-city="Adelaide">Adelaide</span></div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Wait for page to load and Leaflet to be available
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof L === 'undefined') {
+                console.error('Leaflet library failed to load');
+                return;
+            }
+            
+            initializeMaps();
+        });
+        
+        function initializeMaps() {
+            // City coordinates
+            const cities = {
+            Adelaide: [-34.9285, 138.6007],
+            Doha: [25.2854, 51.5310],
+            Vienna: [48.2082, 16.3738],
+            Salzburg: [47.8095, 13.0550],
+            Isen: [48.1167, 12.0833], // Near Munich
+                Tubingen: [48.5216, 9.0576],
+            Basel: [47.5596, 7.5886],
+            Rabat: [34.0209, -6.8417],
+            Geneva: [46.2044, 6.1432],
+            Lausanne: [46.5197, 6.6323],
+            Interlaken: [46.6863, 7.8632],
+            Zurich: [47.3769, 8.5417]
+        };
+
+        // Create Overview Map
+        const overviewMap = L.map('overviewMap').setView([40, 10], 3);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(overviewMap);
+
+        // Add markers and flight routes to overview map
+        // Only show cities involved in flights on the overview map
+        const flightRoutes = [
+            [cities.Adelaide, cities.Doha],
+            [cities.Doha, cities.Vienna],
+            [cities.Basel, cities.Rabat],
+            [cities.Rabat, cities.Geneva],
+            [cities.Zurich, cities.Doha],
+            [cities.Doha, cities.Adelaide]
+        ];
+
+        // Map of city names for the flight cities
+        const flightCityNames = {
+            Adelaide: cities.Adelaide,
+            Doha: cities.Doha,
+            Vienna: cities.Vienna,
+            Basel: cities.Basel,
+            Rabat: cities.Rabat,
+            Geneva: cities.Geneva,
+            Zurich: cities.Zurich
+        };
+
+        // Translations for city display names (keyed by canonical key used above)
+        const cityTranslations = {
+            en: {
+                Geneva: 'Geneva',
+                Tubingen: 'Tübingen',
+                Basel: 'Basel',
+                Lausanne: 'Lausanne',
+                Isen: 'Isen',
+                Vienna: 'Vienna',
+                Salzburg: 'Salzburg',
+                Interlaken: 'Interlaken',
+                Zurich: 'Zurich',
+                Rabat: 'Rabat',
+                Adelaide: 'Adelaide',
+                Doha: 'Doha'
+            },
+            fr: {
+                Geneva: 'Genève',
+                Tubingen: 'Tübingen',
+                Basel: 'Bâle',
+                Lausanne: 'Lausanne',
+                Isen: 'Isen',
+                Vienna: 'Vienne',
+                Salzburg: 'Salzbourg',
+                Interlaken: 'Interlaken',
+                Zurich: 'Zurich',
+                Rabat: 'Rabat',
+                Adelaide: 'Adélaïde',
+                Doha: 'Doha'
+            }
+            ,
+            ar: {
+                Geneva: 'جنيف',
+                Tubingen: 'توبنغن',
+                Basel: 'بازل',
+                Lausanne: 'لوزان',
+                Isen: 'إيزن',
+                Vienna: 'فيينا',
+                Salzburg: 'سالزبورغ',
+                Interlaken: 'إنترلاكن',
+                Zurich: 'زيورخ',
+                Rabat: 'الرباط',
+                Adelaide: 'أديلايد',
+                Doha: 'الدوحة'
+            }
+        };
+
+        // Store marker references so we can update labels when language changes
+        const overviewMarkers = {};
+        const europeMarkers = {};
+
+        // Dates for flight segments (inferred from itinerary)
+        const flightDates = {
+            'Adelaide-Doha': 'Sep 3-4',
+            'Doha-Vienna': 'Sep 3-4',
+            'Basel-Rabat': 'Sep 20',
+            'Rabat-Geneva': 'Sep 30',
+            'Zurich-Doha': 'Oct 7-8',
+            'Doha-Adelaide': 'Oct 7-8'
+        };
+
+        // Arrival/departure schedule for cities (inferred from itinerary)
+        const citySchedule = {
+            Adelaide: { departure: 'Sep 3', arrival: 'Oct 9' },
+            Vienna: { arrival: 'Sep 4' },
+            // Salzburg: { arrival: 'Sep 8', departure: 'Sep 10' },
+            // Isen: { arrival: 'Sep 10', departure: 'Sep 14' },
+            // Tubingen: { arrival: 'Sep 14', departure: 'Sep 18' },
+            Basel: { departure: 'Sep 20' },
+            Rabat: { arrival: 'Sep 20', departure: 'Sep 30' },
+            Geneva: { arrival: 'Sep 30'},
+            // Lausanne: { arrival: 'Sep 30', departure: 'Oct 2' },
+            // Interlaken: { arrival: 'Oct 2', departure: 'Oct 6' },
+            Zurich: { departure: 'Oct 7' },
+			Doha: { arrival: 'Oct 7', departure: 'Oct 8' }
+        };
+
+    // Overview city markers will be added after polylines so they render on top
+
+    // Flight routes (defined above)
+
+        // Draw flight polylines and add date labels at midpoints
+        // Draw flight polylines (dates removed for clarity)
+        flightRoutes.forEach(route => {
+            L.polyline(route, {
+                color: '#e74c3c',
+                weight: 3,
+                opacity: 0.7
+            }).addTo(overviewMap);
+        });
+
+        // Ground routes in Europe
+        const groundRoutes = [
+            [cities.Vienna, cities.Salzburg],
+            [cities.Salzburg, cities.Isen],
+            [cities.Isen, cities.Tubingen],
+            [cities.Tubingen, cities.Basel],
+            [cities.Geneva, cities.Lausanne],
+            [cities.Lausanne, cities.Interlaken],
+            [cities.Interlaken, cities.Zurich]
+        ];
+
+        groundRoutes.forEach(route => {
+            L.polyline(route, {
+                color: '#2B3036',
+                weight: 4,
+                opacity: 0.7
+            }).addTo(overviewMap);
+        });
+
+        // Now add overview city markers (so they appear above polylines)
+        Object.keys(flightCityNames).forEach(city => {
+            const coords = flightCityNames[city];
+            const marker = L.circleMarker(coords, {
+                radius: 3,
+                fillColor: '#3498db',
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.9
+            }).addTo(overviewMap);
+            // save marker reference
+            overviewMarkers[city] = marker;
+
+            marker.bindPopup(`<b>${cityTranslations.en[city] || city}</b>`);
+            // build label content: city name + arrival/departure when available
+            const sched = citySchedule[city] || {};
+            let labelHtml = `${cityTranslations.en[city] || city}`;
+            if (sched && (sched.arrival || sched.departure)) {
+                if (sched.arrival) labelHtml += `<br>🛬 <strong>${sched.arrival}</strong>`;
+                if (sched.departure) labelHtml += `<br>🛫 <strong>${sched.departure}</strong>`;
+            }
+
+            // put Basel and Geneva labels to the left to reduce overlap
+            if (city === 'Basel' || city === 'Geneva' || city === 'Rabat') {
+                marker.bindTooltip(labelHtml, {
+                    permanent: true,
+                    direction: 'left',
+                    offset: [-8, 0],
+                    className: 'city-label'
+                });
+            } else {
+                marker.bindTooltip(labelHtml, {
+                    permanent: true,
+                    direction: 'right',
+                    offset: [8, 0],
+                    className: 'city-label'
+                });
+            }
+        });
+
+        // Create Europe Detail Map
+        const europeMap = L.map('europeMap').setView([47, 8], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(europeMap);
+
+        // European cities only
+        const europeanCities = {
+            Vienna: cities.Vienna,
+            Salzburg: cities.Salzburg,
+            Isen: cities.Isen,
+            Tubingen: cities.Tubingen,
+            Basel: cities.Basel,
+            Geneva: cities.Geneva,
+            Lausanne: cities.Lausanne,
+            Interlaken: cities.Interlaken,
+            Zurich: cities.Zurich
+        };
+
+        // Dates for each European city (used in tooltips)
+        const cityDates = {
+            Vienna: 'Sep 4-8',
+            Salzburg: 'Sep 8-10',
+            Isen: 'Sep 10-14',
+            Tubingen: 'Sep 14-18',
+            Basel: 'Sep 18-20',
+            Geneva: 'Sep 30',
+            Lausanne: 'Sep 30-Oct 2',
+            Interlaken: 'Oct 2-6',
+            Zurich: 'Oct 6-7'
+        };
+
+        // Add numbered markers for European cities in chronological order
+        const cityOrder = ['Vienna', 'Salzburg', 'Isen', 'Tubingen', 'Basel', 'Geneva', 'Lausanne', 'Interlaken', 'Zurich'];
+        
+		// Add ground routes to Europe map
+        groundRoutes.forEach(route => {
+            L.polyline(route, {
+                color: '#2B3036',
+                weight: 4,
+                opacity: 0.9,
+				dashArray: '10, 10'
+            }).addTo(europeMap);
+        });
+
+        // Add smaller circle markers and permanent labels (city + bold date)
+        cityOrder.forEach((city, index) => {
+            const coords = europeanCities[city];
+            const marker = L.circleMarker(coords, {
+                radius: 6,
+                fillColor: '#3498db',
+                color: '#ffffff',
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.9
+            }).addTo(europeMap);
+
+            // store ref
+            europeMarkers[city] = marker;
+
+            // Popup still shows the numbered order and city
+            marker.bindPopup(`<b>${index + 1}. ${cityTranslations.en[city] || city}</b>`);
+
+            // Permanent tooltip label with city name and bold date
+            const dateText = cityDates[city] || '';
+            const labelHtml = `${cityTranslations.en[city] || city}<br><strong>${dateText}</strong>`;
+            // Move labels for some cities to the left to avoid overlap
+            const leftCities = ['Basel', 'Lausanne', 'Tubingen', 'Isen'];
+            if (leftCities.includes(city)) {
+                marker.bindTooltip(labelHtml, {
+                    permanent: true,
+                    direction: 'left',
+                    offset: [-8, 0],
+                    className: 'city-label'
+                });
+            } else {
+                marker.bindTooltip(labelHtml, {
+                    permanent: true,
+                    direction: 'right',
+                    offset: [8, 0],
+                    className: 'city-label'
+                });
+            }
+        });
+
+        
+
+    // Fit Europe map to show all European cities
+    const allEuropeanCoords = Object.values(europeanCities);
+    const group = L.featureGroup(allEuropeanCoords.map(coord => L.marker(coord)));
+    europeMap.fitBounds(group.getBounds().pad(0.1));
+        
+    // expose some objects to global scope so the language switcher can update labels
+    window.cityTranslations = cityTranslations;
+    window.overviewMarkers = overviewMarkers;
+    window.europeMarkers = europeMarkers;
+    window.citySchedule = citySchedule;
+    window.cityDates = cityDates;
+    }
+        // --- Translations and language switching ---
+        const translations = {
+            en: {
+                headerTitle: '✈️ European Adventure 2025',
+                overviewTitle: '🌍 Complete Journey Overview',
+                europeTitle: '🏰 European Ground Journey',
+                legendTitle: 'Map Legend',
+                legendFlight: '✈️ Flight Routes',
+                legendGround: '🚆 Train Travel',
+                legendCity: '🏙️ Cities Visited',
+                itineraryTitle: '📅 Detailed Itinerary',
+                langLabel: 'Language'
+            },
+            fr: {
+                headerTitle: '✈️ Aventure européenne 2025',
+                overviewTitle: '🌍 Vue d\'ensemble du voyage',
+                europeTitle: '🏰 Parcours terrestre en Europe',
+                legendTitle: 'Légende de la carte',
+                legendFlight: '✈️ Itinéraires de vol',
+                legendGround: '🚆 Voyages en train',
+                legendCity: '🏙️ Villes Visitées',
+                itineraryTitle: '📅 Itinéraire détaillé',
+                langLabel: 'Langue'
+            }
+            ,
+            ar: {
+                headerTitle: '✈️ مغامرة أوروبية 2025',
+                overviewTitle: '🌍 نظرة عامة على الرحلة',
+                europeTitle: '🏰 رحلة برية في أوروبا',
+                legendTitle: 'مفتاح الخريطة',
+                legendFlight: '✈️ رحلات جوية',
+                legendGround: '🚆 سفر بالقطار',
+                legendCity: '🏙️ المدن التي تم زيارتها',
+                itineraryTitle: '📅 المسار التفصيلي',
+                langLabel: 'اللغة'
+            }
+        };
+
+        // Country translations
+        const countryTranslations = {
+            en: {
+                Austria: 'Austria',
+                Germany: 'Germany',
+                Switzerland: 'Switzerland',
+                Morocco: 'Morocco',
+                Qatar: 'Qatar'
+            },
+            fr: {
+                Austria: 'Autriche',
+                Germany: 'Allemagne',
+                Switzerland: 'Suisse',
+                Morocco: 'Maroc',
+                Qatar: 'Qatar'
+            }
+            ,
+            ar: {
+                Austria: 'النمسا',
+                Germany: 'ألمانيا',
+                Switzerland: 'سويسرا',
+                Morocco: 'المغرب',
+                Qatar: 'قطر'
+            }
+        };
+
+        // expose country translations
+        window.countryTranslations = countryTranslations;
+
+        // small phrase translations used in itinerary
+        const phraseTranslations = {
+            en: {
+                nearMunich: '(near Munich)',
+                via: 'via',
+                arriveIn: 'Arrive in'
+            },
+            fr: {
+                nearMunich: '(près de Munich)',
+                via: 'via',
+                arriveIn: 'Arrivée à'
+            },
+            ar: {
+                nearMunich: '(بالقرب من ميونيخ)',
+                via: 'عبر',
+                arriveIn: 'الوصول إلى'
+            }
+        };
+        window.phraseTranslations = phraseTranslations;
+
+        function setLanguage(lang) {
+            const t = translations[lang] || translations.en;
+            document.getElementById('headerTitle').textContent = t.headerTitle;
+            // headerSubtitle left as original; keep date text
+            // document.getElementById('headerSubtitle').textContent = t.headerSubtitle || document.getElementById('headerSubtitle').textContent;
+            document.getElementById('overviewTitle').textContent = t.overviewTitle || document.getElementById('overviewTitle').textContent;
+            document.getElementById('europeTitle').textContent = t.europeTitle || document.getElementById('europeTitle').textContent;
+            document.getElementById('legendTitle').textContent = t.legendTitle;
+            document.getElementById('legendFlight').textContent = t.legendFlight;
+            document.getElementById('legendGround').textContent = t.legendGround;
+            document.getElementById('legendCity').textContent = t.legendCity;
+            document.getElementById('itineraryTitle').textContent = t.itineraryTitle;
+            document.getElementById('langLabel').textContent = t.langLabel;
+
+            // RTL handling for Arabic
+            if (lang === 'ar') {
+                document.documentElement.dir = 'rtl';
+                // align header text to right
+                document.querySelectorAll('.header, .header h1, .header p').forEach(el => el.style.textAlign = 'right');
+            } else {
+                document.documentElement.dir = 'ltr';
+                document.querySelectorAll('.header, .header h1, .header p').forEach(el => el.style.textAlign = 'left');
+            }
+
+            // Update tooltips for overview markers if they exist
+            if (typeof window.cityTranslations !== 'undefined') {
+                const ct = window.cityTranslations;
+                // update overview markers
+                const om = window.overviewMarkers || {};
+                const cs = window.citySchedule || {};
+                Object.keys(om).forEach(city => {
+                    const marker = om[city];
+                    if (!marker) return;
+                    const sched = cs[city] || {};
+                    let labelHtml = `${ct[lang] && ct[lang][city] ? ct[lang][city] : (ct.en && ct.en[city] ? ct.en[city] : city)}`;
+                    if (sched && (sched.arrival || sched.departure)) {
+                        if (sched.arrival) labelHtml += `<br>🛬 <strong>${sched.arrival}</strong>`;
+                        if (sched.departure) labelHtml += `<br>🛫 <strong>${sched.departure}</strong>`;
+                    }
+                    // update tooltip and popup
+                    marker.unbindTooltip();
+                    marker.unbindPopup();
+                    marker.bindPopup(`<b>${ct[lang] && ct[lang][city] ? ct[lang][city] : (ct.en && ct.en[city] ? ct.en[city] : city)}</b>`);
+                    // direction adjustments as before
+                    if (city === 'Basel' || city === 'Geneva' || city === 'Rabat') {
+                        marker.bindTooltip(labelHtml, { permanent: true, direction: 'left', offset: [-8, 0], className: 'city-label' });
+                    } else {
+                        marker.bindTooltip(labelHtml, { permanent: true, direction: 'right', offset: [8, 0], className: 'city-label' });
+                    }
+                });
+
+                // update europe markers
+                const em = window.europeMarkers || {};
+                const cd = window.cityDates || {};
+                Object.keys(em).forEach(city => {
+                    const marker = em[city];
+                    if (!marker) return;
+                    const dateText = cd[city] || '';
+                    const labelHtml = `${ct[lang] && ct[lang][city] ? ct[lang][city] : (ct.en && ct.en[city] ? ct.en[city] : city)}<br><strong>${dateText}</strong>`;
+                    marker.unbindTooltip();
+                    marker.unbindPopup();
+                    marker.bindPopup(`<b>${ct[lang] && ct[lang][city] ? ct[lang][city] : (ct.en && ct.en[city] ? ct.en[city] : city)}</b>`);
+                    const leftCities = ['Basel', 'Lausanne', 'Tubingen', 'Isen'];
+                    if (leftCities.includes(city)) {
+                        marker.bindTooltip(labelHtml, { permanent: true, direction: 'left', offset: [-8, 0], className: 'city-label' });
+                    } else {
+                        marker.bindTooltip(labelHtml, { permanent: true, direction: 'right', offset: [8, 0], className: 'city-label' });
+                    }
+                });
+
+                // update any itinerary spans with data-city attributes
+                document.querySelectorAll('[data-city]').forEach(el => {
+                    const key = el.getAttribute('data-city');
+                    if (ct[lang] && ct[lang][key]) {
+                        el.textContent = ct[lang][key];
+                    }
+                });
+
+                // update country spans
+                const ctrans = window.countryTranslations || {};
+                document.querySelectorAll('[data-country]').forEach(el => {
+                    const key = el.getAttribute('data-country');
+                    if (ctrans[lang] && ctrans[lang][key]) {
+                        el.textContent = ctrans[lang][key];
+                    }
+                });
+                // update phrase spans (e.g. near Munich)
+                const ptrans = window.phraseTranslations || {};
+                document.querySelectorAll('[data-phrase]').forEach(el => {
+                    const key = el.getAttribute('data-phrase');
+                    if (ptrans[lang] && ptrans[lang][key]) {
+                        el.textContent = ptrans[lang][key];
+                    }
+                });
+
+                // Handle directional city sequences (e.g. City A → City B)
+                // Keep city order (departure then destination) but flip arrow glyph for Arabic.
+                document.querySelectorAll('[data-dir-seq]').forEach(seq => {
+                    const cityEls = Array.from(seq.querySelectorAll('[data-city]'));
+                    const arrowEl = seq.querySelector('[data-arrow]');
+                    if (!cityEls.length || !arrowEl) return;
+
+                    // Resolve translated names (fallback to English key or raw key)
+                    const ct = window.cityTranslations || {};
+                    if (cityEls[0]) {
+                        const k0 = cityEls[0].getAttribute('data-city');
+                        cityEls[0].textContent = (ct[lang] && ct[lang][k0]) || (ct.en && ct.en[k0]) || k0;
+                    }
+                    if (cityEls[1]) {
+                        const k1 = cityEls[1].getAttribute('data-city');
+                        cityEls[1].textContent = (ct[lang] && ct[lang][k1]) || (ct.en && ct.en[k1]) || k1;
+                    }
+
+                    // Only flip the arrow glyph; do not reorder city elements
+                    arrowEl.textContent = (lang === 'ar') ? '←' : '→';
+                });
+            }
+
+            // reflect the active button (if language buttons exist)
+            document.querySelectorAll('.lang-btn').forEach(b => {
+                const l = b.getAttribute('data-lang');
+                b.setAttribute('aria-pressed', l === lang ? 'true' : 'false');
+            });
+        }
+
+        const _langSelect = document.getElementById('langSelect');
+        if (_langSelect) {
+            _langSelect.addEventListener('change', (e) => setLanguage(e.target.value));
+        }
+        // initialize language
+        setLanguage('en');
+        // wire up new large flag buttons if present
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const lang = btn.getAttribute('data-lang');
+                // update pressed state
+                document.querySelectorAll('.lang-btn').forEach(b => b.setAttribute('aria-pressed', 'false'));
+                btn.setAttribute('aria-pressed', 'true');
+                // update visual active class handled by CSS [aria-pressed]
+                setLanguage(lang);
+            });
+        });
+    </script>
+</body>
+</html>
