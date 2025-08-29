@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Travel Journey - 2025</title>
+    <title>A&Y Trip - 2025</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <style>
@@ -192,6 +192,46 @@
                 height: 400px;
             }
         }
+            /* Improve language selector layout on narrow screens */
+            @media (max-width: 480px) {
+                .header {
+                    padding: 16px 12px;
+                }
+                /* stack the header content so the title doesn't get squeezed */
+                .header > div {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    align-items: stretch;
+                }
+                .header h1 {
+                    font-size: 1.6em;
+                    margin-bottom: 0;
+                    text-align: left;
+                }
+
+                /* Make the language picker compact: show flags only, smaller padding */
+                .lang-picker {
+                    gap: 6px;
+                    flex-wrap: nowrap;
+                    justify-content: flex-end;
+                }
+                .lang-btn {
+                    padding: 6px 8px;
+                    font-size: 0.9rem;
+                    border-radius: 6px;
+                    min-width: unset;
+                }
+                .lang-btn .lang-label {
+                    display: none; /* hide text labels on small screens to save space */
+                }
+                .lang-btn .flag {
+                    font-size: 1.25rem;
+                }
+
+                /* Hide the separate "Language" label on small screens to reduce clutter */
+                #langLabel { display: none; }
+            }
     </style>
 </head>
 <body>
